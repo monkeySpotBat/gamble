@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Shop - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-96 text-center">
+        <h2 class="text-2xl font-bold mb-4">Register / Login</h2>
+        <input id="username" type="text" placeholder="Username" class="w-full p-2 border rounded mb-4">
+        <input id="password" type="password" placeholder="Password" class="w-full p-2 border rounded mb-4">
+        <label class="flex items-center justify-center mb-4">
+            <input type="checkbox" id="stayLoggedIn" class="mr-2"> stay logged in
+        </label>
+        <button onclick="register()" class="w-full bg-blue-500 text-white p-2 rounded mb-2">Register for new User</button>
+        <button onclick="login()" class="w-full bg-green-500 text-white p-2 rounded">Login</button>
+        <p id="status" class="mt-4 text-sm text-gray-600"></p>
+    </div>
+
+    <script>
+        function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username && password) {
+                localStorage.setItem('user', JSON.stringify({ username, password }));
+                document.getElementById('status').innerText = 'Registration successful!';
+            } else {
+                document.getElementById('status').innerText = 'Please fill out all fields!';
+            }
+        }
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const storedUser = JSON.parse(localStorage.getItem('user'));
+            
+            if (storedUser && storedUser.username === username && storedUser.password === password) {
+                document.getElementById('status').innerText = 'Login successfull!';
+                if (document.getElementById('stayLoggedIn').checked) {
+                    localStorage.setItem('stayLoggedIn', 'true');
+                }
+                setTimeout(() => window.location.href = 'shop.html', 1000);
+            } else {
+                document.getElementById('status').innerText = 'Incorrect login details!';
+            }
+        }
+
+        window.onload = function() {
+            if (localStorage.getItem('stayLoggedIn') === 'true' && localStorage.getItem('user')) {
+                window.location.href = 'shop.html';
+            }
+        };
+    </script>
+</body>
+</html>

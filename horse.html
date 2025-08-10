@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horse Race</title>
+    <style>
+        body { 
+            font-family: 'Arial Rounded MT Bold', Arial, sans-serif; 
+            text-align: center; 
+            background: linear-gradient(135deg, #1a472a, #2c7050);
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .race-container { 
+            position: relative; 
+            width: 90%; 
+            height: 500px; 
+            margin: 20px auto; 
+            border: 3px solid #d4af37;
+            background: linear-gradient(to bottom, #0d5520, #1e8449);
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .track {
+            position: relative;
+            width: 95%;
+            height: 100px;
+            margin: 15px auto;
+            background: 
+                linear-gradient(to bottom, #5d4037, #4e342e),
+                repeating-linear-gradient(90deg, 
+                    transparent 0px, 
+                    transparent 19px, 
+                    #fff 20px, 
+                    #fff 21px
+                );
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .horse {
+            position: absolute;
+            width: 120px;
+            height: auto;
+            left: -50px;
+            transition: left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+            z-index: 2;
+        }
+        .finish-line {
+            position: absolute;
+            right: 25%;
+            top: 0;
+            width: 20px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #ff0000,
+                #ff0000 10px,
+                #ffffff 10px,
+                #ffffff 20px
+            );
+            box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .bet-container { 
+            margin: 30px auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 800px;
+        }
+        .result { 
+            font-size: 28px; 
+            font-weight: bold; 
+            margin: 25px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        button { 
+            padding: 15px 25px;
+            margin: 5px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(145deg, #d4af37, #b08d2f);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        button:disabled { 
+            background: linear-gradient(145deg, #6b6b6b, #595959);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .horse-number {
+            position: absolute;
+            left: 10px;
+            font-size: 24px;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            z-index: 3;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a472a;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 3px solid #d4af37;
+            z-index: 100;
+            text-align: center;
+        }
+        .popup button {
+            margin-top: 15px;
+            padding: 10px 25px;
+        }
+        .balance {
+            font-size: 24px;
+            margin: 20px;
+            padding: 15px;
+            background: #1a472a;
+            border-radius: 10px;
+            display: inline-block;
+            border: 2px solid #d4af37;
+        }
+        .bet-controls {
+            margin: 20px auto;
+            max-width: 500px;
+        }
+        #betAmount {
+            padding: 12px;
+            font-size: 16px;
+            width: 150px;
+            margin-right: 10px;
+            border-radius: 25px;
+            border: 2px solid #d4af37;
+            background: #1a472a;
+            color: white;
+        }
+      
+      
+      .menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .menu {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding-top: 60px;
+            transition: left 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        .menu a {
+            display: block;
+            padding: 15px;
+            text-decoration: none;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .menu a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .menu.active {
+            left: 0;
+        }
+      .menu a img {
+    width: 22px; 
+    height: 22px;
+    margin-right: 8px;
+}
+    </style>
+</head>
+<body>
+  <button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+  <div class="menu-toggle" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+       <div></div>
+    </div>
+  
+  
+  <div class="menu" id="sidebarMenu">
+        <a href="menu.html">🏠 Home</a>
+        <a href="index.html">🎯 Plinko</a>
+        <a href="slot.html">🎰 Slot Machine</a>
+      <a href="roulette.html">
+    <img src="https://cdn-icons-png.flaticon.com/512/1232/1232529.png" alt="Roulette"> 
+    Roulette
+</a>
+       <a href="Dice.html">🎲 Dice Roll</a>
+    <a href="Risk.html">🔦💵 Risk</a>
+    <a href="scratch.html">🎴🪙 Scratch card</a>
+    </div>
+  
+  
+    <h1>🏇 Horse Race 🏇</h1>
+    <div class="balance">Money: <span id="balance">1000</span>€</div>
+    
+    <div class="bet-controls">
+        <input type="number" id="betAmount" placeholder="Wetteinsatz eingeben" min="1" value="100">
+        <button onclick="validateBet()">confirm bet</button>
+    </div>
+
+    <p>choose a Horse:</p>
+
+    <div class="popup" id="resultPopup">
+    <h2 id="popupTitle"></h2>
+    <p id="popupMessage"></p>
+    <button onclick="this.parentElement.style.display='none'">cancel</button>
+</div>
+
+  
+  
+  
+    <div class="bet-container">
+        <button id="bet-thunder" onclick="placeBet('Thunder')">#1 Thunder 🐎</button>
+        <button id="bet-lightning" onclick="placeBet('Lightning')">#2 Lightning ⚡</button>
+        <button id="bet-shadow" onclick="placeBet('Shadow')">#3 Shadow 🌑</button>
+        <button id="bet-blaze" onclick="placeBet('Blaze')">#4 Blaze 🔥</button>
+    </div>
+
+    <div class="race-container">
+        <div class="finish-line"></div>
+         <div class="track">
+        <div class="horse-number">1</div>
+        <div class="horse" id="Thunder" style="font-size: 120px; line-height: 100px; transform: scaleX(-1);">🏇🏼</div> <!-- Pferd 1 -->
+    </div>
+    <div class="track">
+        <div class="horse-number">2</div>
+        <div class="horse" id="Lightning" style="font-size: 120px; line-height: 100px; transform: scaleX(-1);">🏇</div> <!-- Pferd 2 -->
+    </div>
+    <div class="track">
+        <div class="horse-number">3</div>
+        <div class="horse" id="Shadow" style="font-size: 120px; line-height: 100px; transform: scaleX(-1);">🏇🏿</div> <!-- Pferd 3 -->
+    </div>
+    <div class="track">
+        <div class="horse-number">4</div>
+        <div class="horse" id="Blaze" style="font-size: 120px; line-height: 100px; transform: scaleX(-1);">🏇🏽</div> <!-- Pferd 4 -->
+    </div>
+    </div>
+
+    <script>
+        let userBet = "";
+        let raceInProgress = false;
+        let currentBalance = parseInt(localStorage.getItem('fakeMoney')) || 1000;
+        let currentBet = 0;
+
+        // Initialisierung
+        document.getElementById('balance').textContent = currentBalance;
+        disableBetButtons(true);
+
+        function validateBet() {
+            const betInput = document.getElementById('betAmount');
+            const betAmount = parseInt(betInput.value);
+            
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert("Please enter a valid amount!");
+                return;
+            }
+            
+            if (betAmount > currentBalance) {
+                alert("not enough money");
+                return;
+            }
+            
+            currentBet = betAmount;
+            document.querySelectorAll(".bet-container button").forEach(button => {
+                button.disabled = false;
+            });
+            betInput.disabled = true;
+        }
+
+        function placeBet(bet) {
+            if (raceInProgress || currentBet === 0) return;
+            
+            userBet = bet;
+            currentBalance -= currentBet;
+            localStorage.setItem('fakeMoney', currentBalance);
+            updateBalance();
+            disableBetButtons(true);
+            startRace();
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').textContent = currentBalance;
+        }
+
+        function startRace() {
+            raceInProgress = true;
+            let horses = ["Thunder", "Lightning", "Shadow", "Blaze"];
+            let progress = { Thunder: 0, Lightning: 0, Shadow: 0, Blaze: 0 };
+            let winnerDeclared = false;
+            
+            let raceInterval = setInterval(() => {
+                horses.forEach(horse => {
+                    let speed = Math.random() * 1.2 + 0.5 + (progress[horse] * 0.008);
+                    progress[horse] += speed;
+                    document.getElementById(horse).style.left = `${progress[horse]}%`;
+                });
+
+                horses.forEach(horse => {
+                    if (progress[horse] >= 75 && !winnerDeclared) {
+                        winnerDeclared = true;
+                        clearInterval(raceInterval);
+                        setTimeout(() => endRace(horse), 300);
+                    }
+                });
+            }, 100);
+        }
+        
+      
+      function toggleMenu() {
+            var menu = document.getElementById("sidebarMenu");
+            menu.classList.toggle("active");
+        }
+      
+        function endRace(winner) {
+    const popup = document.getElementById('resultPopup');
+    const title = document.getElementById('popupTitle');
+    const message = document.getElementById('popupMessage');
+    
+    if (winner === userBet) {
+        currentBalance += currentBet * 2;
+        title.textContent = "🎉 winner!";
+        message.textContent = `You won ${currentBet * 2}€ `;
+    } else {
+        title.textContent = "😢 you lost";
+        message.textContent = `Winner was ${winner}. you loose ${currentBet}€.`;
+    }
+    
+    localStorage.setItem('fakeMoney', currentBalance);
+    updateBalance();
+    popup.style.display = 'block'; // Popup anzeigen
+    
+    // Reset erst nach 3 Sekunden durchführen
+    setTimeout(resetRace, 3000); 
+}
+        
+function resetRace() {
+    // Sofortiges Zurücksetzen der Pferdepositionen
+    document.querySelectorAll('.horse').forEach(horse => {
+        horse.style.transition = 'none';
+        horse.style.left = '-50px';
+        void horse.offsetWidth; // Erzwingt Layout-Update
+        horse.style.transition = '';
+    });
+
+    // Zurücksetzen aller Steuerelemente
+    document.getElementById('betAmount').disabled = false;
+    document.getElementById('betAmount').value = "100";
+    currentBet = 0;
+    userBet = "";
+    raceInProgress = false;
+
+    // UI-Status aktualisieren
+    disableBetButtons(true);
+    document.getElementById('resultPopup').style.display = 'none';
+    
+    // Kontostand erneut prüfen
+    if(currentBalance < 1) {
+        alert("Game Over! Ihr Guthaben ist aufgebraucht.");
+        localStorage.removeItem('fakeMoney');
+        window.location.reload();
+    }
+}
+
+function disableBetButtons(disabled) {
+    const hasBalance = currentBalance > 0;
+    document.querySelectorAll(".bet-container button").forEach(button => {
+        button.disabled = disabled || !hasBalance || raceInProgress;
+    });
+}
+    </script>
+</body>
+</html>

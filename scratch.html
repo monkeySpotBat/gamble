@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch Card Game</title>
+    <style>
+        .menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .menu {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding-top: 60px;
+            transition: left 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        .menu a {
+            display: block;
+            padding: 15px;
+            text-decoration: none;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .menu a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .menu.active {
+            left: 0;
+        }
+      .menu a img {
+    width: 22px; 
+    height: 22px;
+    margin-right: 8px;
+}
+
+        body, .scratch-container {
+            cursor: default !important;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(to right, #2c3e50, #4ca1af);
+            font-family: 'Poppins', sans-serif;
+            user-select: none;
+            color: #fff;
+        }
+
+        .stats {
+            margin-bottom: 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        button {
+            background: #ffcc00;
+            border: none;
+            padding: 12px 25px;
+            margin: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #ff9900;
+        }
+
+        .scratch-container {
+            position: relative;
+            width: 500px;
+            height: 400px;
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            background: #222;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .custom-alert {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .scratch-card {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .number {
+            width: 70px;
+            height: 70px;
+            background: gray;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 26px;
+            font-weight: bold;
+            border-radius: 5px;
+            position: relative;
+            color: gray;
+            overflow: hidden;
+        }
+
+        .scratch-surface {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: gray;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body>
+
+<button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+<div class="menu" id="menu">
+    <a href="menu.html">🏠Home</a>
+    <a href="https://dune-glistening-zinnia.glitch.me/">🎯 Plinko</a>
+    <a href="roulette.html"><img src="https://cdn-icons-png.flaticon.com/512/1232/1232529.png" alt="Roulette"> Roulette</a>
+    <a href="Dice.html">🎲 Dice Roll</a>
+    <a href="Risk.html">🔦💵 Risk</a>
+    <a href="horse.html">🏇🏆🏁 Horse Race</a>
+    <a href="slot.html">🎰 Slot Machine</a>
+</div>
+
+<div id="custom-alert" class="custom-alert"></div>
+
+<div class="stats">
+    <p>Money: <span id="money">100</span>€</p>
+    <p>Available Tickets: <span id="tickets">0</span></p>
+    <button onclick="buyTicket()">Buy Scratch Card (10€)</button>
+    <button onclick="generateScratchCard()">Reveal New Scratch Card</button>
+</div>
+
+<div id="scratch-container" class="scratch-container">
+    <div class="custom-cursor" id="custom-cursor"></div>
+</div>
+
+<script>
+    // Lade die gespeicherten Werte oder setze Standardwerte
+    let money = localStorage.getItem("fakeMoney") ? parseInt(localStorage.getItem("fakeMoney")) : 100;
+    let tickets = localStorage.getItem("Cards") ? parseInt(localStorage.getItem("Cards")) : 0;
+
+    const symbols = ["🍒", "🍋", "🔔", "⭐", "🍀", "💎"];
+    const winnings = {"💎": [10, 100, 10000]};
+    const scratchContainer = document.getElementById("scratch-container");
+    const cursor = document.getElementById("custom-cursor");
+
+    // Menü toggle
+    function toggleMenu() {
+        var menu = document.getElementById("menu");
+        if (menu) {
+            menu.classList.toggle("active");
+        } else {
+            console.error("Fehler: Menü nicht gefunden!");
+        }
+    }
+
+    // Funktion zur Anzeige von Benachrichtigungen
+    function showCustomAlert(message) {
+        const alertBox = document.getElementById("custom-alert");
+        alertBox.textContent = message;
+        alertBox.style.display = "block";
+        setTimeout(() => {
+            alertBox.style.display = "none";
+        }, 3000);
+    }
+
+    // Funktion zur Aktualisierung von Stats
+    function updateStats() {
+        document.getElementById("money").textContent = money;
+        document.getElementById("tickets").textContent = tickets;
+        // Werte speichern
+        localStorage.setItem("fakeMoney", money);
+        localStorage.setItem("Cards", tickets);
+    }
+
+    // Funktion, um ein Ticket zu kaufen
+    function buyTicket() {
+        if (money >= 10) {
+            money -= 10;
+            tickets++;
+            updateStats(); // Werte speichern und aktualisieren
+        } else {
+            showCustomAlert("Not enough money!");
+        }
+    }
+
+    // Funktion, um ein neues Scratchcard zu generieren
+    function generateScratchCard() {
+        if (tickets <= 0) {
+            showCustomAlert("You have no tickets left!");
+            return;
+        }
+        tickets--; // Karte wird verbraucht
+        updateStats(); // Werte speichern und aktualisieren
+
+        scratchContainer.innerHTML = '<div class="custom-cursor" id="custom-cursor"></div>';
+
+        const card = document.createElement("div");
+        card.classList.add("scratch-card");
+        scratchContainer.appendChild(card);
+
+        const numbers = Array.from({length: 20}, (_, i) => i + 1);
+        const hiddenSymbols = numbers.map(() => Math.random() < 0.04 ? "💎" : symbols[Math.floor(Math.random() * 5)]);
+
+        let revealedCount = 0;
+        hiddenSymbols.forEach((symbol, i) => {
+            const div = document.createElement("div");
+            div.classList.add("number");
+            div.textContent = "";
+            card.appendChild(div);
+
+            const scratchSurface = document.createElement("div");
+            scratchSurface.classList.add("scratch-surface");
+            div.appendChild(scratchSurface);
+
+            scratchSurface.addEventListener("mousemove", function(e) {
+                if (e.buttons === 1) {
+                    div.textContent = symbol;
+                    this.style.opacity = 0;
+                    this.remove();
+                    revealedCount++;
+                    if (revealedCount === hiddenSymbols.length) {
+                        checkWin(hiddenSymbols); // Überprüfen, ob man gewonnen hat
+                    }
+                }
+            });
+        });
+    }
+
+    // Funktion zur Überprüfung des Gewinns
+    function checkWin(hiddenSymbols) {
+        let diamondCount = hiddenSymbols.filter(s => s === "💎").length;
+        let winAmount = winnings["💎"][diamondCount - 1] || 0;
+        money += winAmount; // Geld erhöhen
+        updateStats(); // Werte speichern und aktualisieren
+        showCustomAlert(winAmount > 0 ? `Congratulations! You won ${winAmount}€!` : "No win! Better luck next time!");
+    }
+
+    // Initiale Werte anzeigen
+    updateStats();
+
+    // Event-Listener für den Cursor
+    scratchContainer.addEventListener("mousemove", (e) => {
+        const rect = scratchContainer.getBoundingClientRect();
+        cursor.style.left = `${e.clientX - rect.left}px`;
+        cursor.style.top = `${e.clientY - rect.top}px`;
+    });
+</script>
+
+</body>
+</html>

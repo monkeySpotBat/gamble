@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guthaben Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-md w-96 text-center">
+            <h2 class="text-2xl font-bold mb-4">Guthaben Shop</h2>
+            <p id="welcome" class="mb-4 text-lg font-semibold"></p>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <button onclick="selectAmount(1)" class="bg-gray-200 p-4 rounded">1€</button>
+                <button onclick="selectAmount(5)" class="bg-gray-200 p-4 rounded">5€</button>
+                <button onclick="selectAmount(10)" class="bg-gray-200 p-4 rounded">10€</button>
+                <button onclick="selectAmount(20)" class="bg-gray-200 p-4 rounded">20€</button>
+                <button onclick="selectAmount(50)" class="bg-gray-200 p-4 rounded">50€</button>
+                <button onclick="selectAmount(100)" class="bg-gray-200 p-4 rounded">100€</button>
+            </div>
+            <p id="selectedAmount" class="text-lg font-semibold">Ausgewähltes Guthaben: 0€</p>
+            <button onclick="processPayment()" class="mt-4 bg-blue-500 text-white p-2 rounded">Pay</button>
+            <div id="loading" class="hidden mt-4 text-gray-700">Processing...</div>
+            <p id="balance" class="text-lg font-semibold mt-4">Guthaben: 0€</p>
+            <button onclick="logout()" class="mt-4 bg-red-500 text-white p-2 rounded">Abmelden</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedAmount = 0;
+
+        function loadUser() {
+            const storedUser = JSON.parse(localStorage.getItem('user'));
+            if (!storedUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('welcome').innerText = `Willkommen, ${storedUser.username}!`;
+            updateBalance();
+        }
+
+        function selectAmount(amount) {
+            selectedAmount = amount;
+            document.getElementById('selectedAmount').innerText = `Ausgewähltes Guthaben: ${amount}€`;
+        }
+
+        function processPayment() {
+            if (selectedAmount === 0) {
+                alert("Bitte wähle einen Betrag aus.");
+                return;
+            }
+            document.getElementById('loading').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+                let balance = parseInt(localStorage.getItem('fakeMoney')) || 0;
+                balance += selectedAmount;
+                localStorage.setItem('fakeMoney', balance);
+                updateBalance();
+                alert(`Zahlung von ${selectedAmount}€ erfolgreich!`);
+            }, 2000);
+        }
+
+        function updateBalance() {
+            let balance = parseInt(localStorage.getItem('fakeMoney')) || 0;
+            document.getElementById('balance').innerText = `Guthaben: ${balance}€`;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        window.onload = loadUser;
+
+function loadUser() {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if (!storedUser) {
+        window.location.href = 'login.html';
+        return;
+    }
+    document.getElementById('welcome').innerText = `Willkommen, ${storedUser.username}!`;
+
+    // Falls fakeMoney nicht existiert, auf 0 setzen
+    if (localStorage.getItem('fakeMoney') === null) {
+        localStorage.setItem('fakeMoney', '0');
+    }
+    
+    updateBalance();
+}
+    </script>
+</body>
+</html>

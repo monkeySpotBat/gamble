@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CasinoRT - Your Virtual Casino</title>
+  <style>
+   body {
+  font-family: Arial, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  text-align: center;
+  padding: 20px;
+  transition: background 0.5s, color 0.5s;
+}
+
+/* Farbvariablen für Light- und Dark-Mode */
+:root {
+  --bg-color: #111;
+  --text-color: white;
+  --card-bg: #222;
+  --button-bg: gold;
+  --button-hover: orange;
+  --shadow-color: rgba(255, 215, 0, 0.5);
+}
+
+.light-mode {
+  --bg-color: white;
+  --text-color: black;
+  --card-bg: #f5f5f5;
+  --button-bg: #ffcc00;
+  --button-hover: #ff9900;
+  --shadow-color: rgba(255, 215, 0, 0.3);
+}
+
+/* Toggle-Button für Dark/Light-Mode */
+.toggle-mode {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background: var(--button-bg);
+  font-size: 14px;
+  font-weight: bold;
+  transition: 0.3s;
+  box-shadow: 0 0 5px var(--shadow-color);
+}
+
+/* Titel */
+h1 {
+  font-size: 2em;
+  text-shadow: 0 0 5px var(--shadow-color);
+}
+
+/* Kontostand-Anzeige */
+.balance {
+  font-size: 1.2em;
+  background: var(--card-bg);
+  padding: 8px 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 5px var(--shadow-color);
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Button zum Aufladen */
+.balance button {
+  background: var(--button-bg);
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+  box-shadow: 0 0 5px var(--shadow-color);
+}
+
+/* Spiele-Container */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+/* Spiel-Karten */
+.card {
+  background: var(--card-bg);
+  padding: 15px;
+  width: 90%;
+  max-width: 200px;
+  height: 220px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 0 5px var(--shadow-color);
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+/* Button "Play Now" */
+.play-now {
+  background: var(--button-bg);
+  color: black;
+  padding: 6px 12px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 0 5px var(--shadow-color);
+}
+
+/* Anpassungen für mobile Geräte */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.8em;
+  }
+
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+  }
+
+  .balance {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .toggle-mode {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
+
+/* Dino-Spiel Container */
+.game-container {
+  margin-top: 30px;
+  padding: 15px;
+  background: var(--card-bg);
+  border-radius: 10px;
+  box-shadow: 0 0 5px var(--shadow-color);
+  display: inline-block;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Dino-Spiel Canvas */
+#gameCanvas {
+  background: #333;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+    .start-game {
+      margin-top: 10px;
+      background: var(--button-bg);
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+      box-shadow: 0 0 8px var(--shadow-color);
+    }
+    .start-game:hover {
+      background: var(--button-hover);
+    }
+    
+    .in-progress {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(255, 165, 0, 0.8);
+    color: black;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 0 5px rgba(255, 165, 0, 0.5);
+  }
+    @media (max-width: 768px) {
+  #gameCanvas {
+    width: 100%;
+    height: auto;
+  }
+}
+    
+    * {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer */
+  user-select: none; /* Standard */
+}
+
+    
+    #gameCanvas {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: none; /* Verhindert unerwünschte Touch-Gesten */
+}
+
+  </style>
+</head>
+<body>
+  
+  <div class="in-progress">
+  🚧 Currently in Development... 🚀
+</div>
+  
+  <button class="toggle-mode" onclick="toggleDarkMode()">🌙/☀️</button>
+  <h1>Welcome to CasinoRT</h1>
+  <p>Your casino, your rules!</p>
+  
+  <div class="balance">
+    <span>Balance: $<span id="money">0</span></span>
+    <button onclick="window.location.href='https://dune-glistening-zinnia.glitch.me/shop.html';">+</button>
+  </div>
+
+  <div class="container">
+    
+    <div class="card" onclick="window.location.href='https://dune-glistening-zinnia.glitch.me/';">
+      <h2>Plinko</h2>
+      <p>Test your luck with Plinko!</p>
+      <div class="play-now">Play Now</div>
+       <h2>🎯🔽💰🏐</h2>
+    </div>
+    
+    <div class="card" onclick="window.location.href='https://dune-glistening-zinnia.glitch.me/slot.html';">
+      <h2>Slot Machine</h2>
+      <p>Spin the reels and win big!</p>
+      <div class="play-now">Play Now</div>
+      <h2>🎰</h2>
+    </div>
+    
+<div class="card" onclick="window.location.href='https://dune-glistening-zinnia.glitch.me/roulette.html';">
+  <h2>Roulette</h2>
+  <p>Spin the wheel and test your luck!</p>
+  <div class="play-now">Play Now</div>
+  <img src="https://cdn-icons-png.flaticon.com/512/1232/1232529.png" 
+       alt="Roulette Icon" 
+       style="width: 30px; height: 30px; margin-top: 10px;">
+</div>
+
+    
+    <div class="card" onclick="window.location.href='https://dune-glistening-zinnia.glitch.me/Dice.html';">
+  <h2>Dice roll</h2>
+  <p>Try your luck with Dice roll</p>
+  <div class="play-now">Play Now</div>
+      <h2>🎲</h2> 
+</div>
+    
+        <div class="card" onclick="window.location.href='https://dune-glistening-zinnia.glitch.me/Risk.html';">
+  <h2>risk</h2>
+  <p>Try your Luck and Risk your Money</p>
+  <div class="play-now">Play Now</div>
+      <h2>💵🔦</h2> 
+</div>
+    
+        
+        <div class="card" onclick="window.location.href='https://dune-glistening-zinnia.glitch.me/horse.html';">
+  <h2>Horse Race</h2>
+  <p>bet on Horses lol</p>
+  <div class="play-now">Play Now</div>
+      <h2>🏁🏆🏇🏽</h2> 
+</div>
+    
+    
+            <div class="card" onclick="window.location.href='https://dune-glistening-zinnia.glitch.me/scratch.html';">
+  <h2>Scratch cards</h2>
+  <p>scratching cards is fun!</p>
+  <div class="play-now">Play Now</div>
+      <h2>🪙🎴</h2> 
+</div>
+    
+    
+    
+    
+    
+  </div>
+  
+  
+  
+  
+
+  <!-- Dino Game -->
+  <div class="game-container">
+    <h2>Dino Runner 🦖</h2>
+    <canvas id="gameCanvas" width="400" height="200"></canvas>
+    <br>
+    <button class="start-game" onclick="startGame()">Start Game</button>
+  </div>
+
+  <script>
+    // Dark-/Lightmode-Funktionalität
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light") {
+        document.body.classList.add("light-mode");
+      } else if (savedTheme === "dark") {
+        document.body.classList.remove("light-mode");
+      } else {
+        localStorage.setItem("theme", "dark");
+      }
+    });
+
+    function toggleDarkMode() {
+      if (document.body.classList.contains("light-mode")) {
+        document.body.classList.remove("light-mode");
+        localStorage.setItem("theme", "dark");
+      } else {
+        document.body.classList.add("light-mode");
+        localStorage.setItem("theme", "light");
+      }
+    }
+
+    // Dino Runner Game
+    function startGame() {
+      let canvas = document.getElementById("gameCanvas");
+      let ctx = canvas.getContext("2d");
+
+      // Hilfsfunktion zum Laden eines Bildes als Promise
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error("Failed to load image: " + src));
+          img.src = src;
+        });
+      }
+
+      // Wir laden nur das Dino-Sprite und das Bodenbild; den Himmel erzeugen wir per Farbe und animierten Wolken.
+      Promise.all([
+        loadImage("https://img.icons8.com/color/48/000000/dinosaur.png"), // Dino-Sprite
+        loadImage("https://static.vecteezy.com/system/resources/thumbnails/000/433/183/small/nhrv_jfg4_181016.jpg")   // Bodenbild
+      ])
+      .then(([dinoImg, groundImg]) => {
+        initGame(dinoImg, groundImg);
+      })
+      .catch(err => {
+        console.error("Error loading images:", err);
+      });
+
+      function initGame(dinoImg, groundImg) {
+        // Spielvariablen
+        let dino = { x: 50, y: 150, width: 40, height: 40, dy: 0, jumping: false };
+        let gravity = 0.6;
+        let jumpStrength = -8;
+        let jumpHold = false;
+        let obstacles = [];
+        let gameSpeed = 6;
+        let gameOver = false;
+        let groundX = 0;
+        let obstacleInterval;
+        
+
+        // Wir erstellen ein Array für animierte Pixelart-Wolken
+        let clouds = [
+          { x: canvas.width + 0, y: 20, speed: 0.5 },
+          { x: canvas.width + 150, y: 40, speed: 0.4 },
+          { x: canvas.width + 300, y: 30, speed: 0.6 }
+        ];
+
+        // Funktion zum Zeichnen einer Pixelart-Wolke
+        function drawCloud(cloud) {
+          ctx.fillStyle = "white";
+          // Simuliere eine pixelige Wolke mit kleinen Quadraten
+          ctx.fillRect(cloud.x, cloud.y, 8, 8);
+          ctx.fillRect(cloud.x + 8, cloud.y - 4, 8, 8);
+          ctx.fillRect(cloud.x + 16, cloud.y, 8, 8);
+          ctx.fillRect(cloud.x + 4, cloud.y + 8, 8, 8);
+          ctx.fillRect(cloud.x + 12, cloud.y + 8, 8, 8);
+        }
+        
+        
+        
+        
+        canvas.addEventListener("touchstart", function () {
+  if (!dino.jumping) {
+    dino.dy = jumpStrength;
+    dino.jumping = true;
+    jumpHold = true;
+  }
+});
+canvas.addEventListener("touchend", function () {
+  jumpHold = false;
+});
+
+        // Funktion zum Zeichnen eines pixeligen Kaktus in Grau
+        // Das Kaktus-Pattern (7 Zeilen x 6 Spalten) definiert die Pixelanordnung
+        function drawCactus(x, obstacleWidth) {
+          const pattern = [
+            "  XX  ",
+            "  XX  ",
+            "  XX x ",
+            "XXXXXX",
+            "x XX  ",
+            "  XX  ",
+            "  XX  "
+          ];
+          const baseCellSize = 4; // Basisgröße pro "Pixel"
+          // Skalierung so wählen, dass die Breite des Musters (6 Zellen) genau obstacleWidth ergibt:
+          const scale = obstacleWidth / (6 * baseCellSize);
+          const cactusHeight = pattern.length * baseCellSize * scale;
+          const y = 180 - cactusHeight; // Der Boden befindet sich bei y=180
+          ctx.fillStyle = "green";
+          for (let i = 0; i < pattern.length; i++) {
+            for (let j = 0; j < pattern[i].length; j++) {
+              if (pattern[i][j] === "X") {
+                ctx.fillRect(x + j * baseCellSize * scale, y + i * baseCellSize * scale, baseCellSize * scale, baseCellSize * scale);
+              }
+            }
+          }
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Himmel: Fülle den Hintergrund mit einem Himmelblau
+          ctx.fillStyle = "#87CEEB";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Wolken aktualisieren und zeichnen
+          clouds.forEach(cloud => {
+            cloud.x -= cloud.speed;
+            if (cloud.x < -40) {
+              cloud.x = canvas.width + Math.random() * 100;
+            }
+            drawCloud(cloud);
+          });
+
+          // Boden (Parallax-Effekt)
+          groundX -= gameSpeed;
+          if (groundX <= -canvas.width) groundX = 0;
+          ctx.drawImage(groundImg, groundX, 180, canvas.width, 20);
+          ctx.drawImage(groundImg, groundX + canvas.width, 180, canvas.width, 20);
+
+          // Sprungmechanik
+          if (jumpHold && dino.jumping) {
+            dino.dy += -0.3;
+          }
+          dino.y += dino.dy;
+          dino.dy += gravity;
+          if (dino.y > 150) {
+            dino.y = 150;
+            dino.jumping = false;
+            dino.dy = 0;
+          }
+
+          // Zeichne den Dino
+          ctx.drawImage(dinoImg, dino.x, dino.y, dino.width, dino.height);
+
+          // Hindernisse aktualisieren und zeichnen (als Kakteen)
+          for (let i = obstacles.length - 1; i >= 0; i--) {
+            let obstacle = obstacles[i];
+            obstacle.x -= gameSpeed;
+
+            // Berechne den Kaktus-Bereich: Breite = obstacle.width, Höhe aus dem Pattern
+            const scale = obstacle.width / (6 * 4); // 6 Zellen * 4 = 24
+            const cactusHeight = 7 * 4 * scale;      // 7 Zeilen * 4
+            const cactusY = 180 - cactusHeight;
+            // Kollision: Prüfe, ob der Dino in den Bereich des Kakteen gelangt
+            if (
+              dino.x + dino.width > obstacle.x &&
+              dino.x < obstacle.x + obstacle.width &&
+              dino.y + dino.height > cactusY
+            ) {
+              gameOver = true;
+              alert("Game Over! Try Again.");
+              clearInterval(obstacleInterval);
+              return;
+            }
+            // Zeichne den Kaktus
+            drawCactus(obstacle.x, obstacle.width);
+
+            // Entferne Hindernisse, die aus dem Bildschirm verschwunden sind
+            if (obstacle.x + obstacle.width < 0) {
+              obstacles.splice(i, 1);
+            }
+          }
+
+          if (!gameOver) {
+            requestAnimationFrame(draw);
+          }
+        }
+
+        function spawnObstacle() {
+  let obstacleWidth = Math.random() * 40 + 20; // Breite 20-60px
+  let gap = Math.random() * 2000 + 1000; // Abstand zwischen Hindernissen größer machen für Touch
+  setTimeout(() => {
+    obstacles.push({ x: canvas.width, width: obstacleWidth });
+  }, gap / gameSpeed);
+}
+
+        // Event-Handler für Sprung
+        function keyDownHandler(e) {
+          if (e.code === "Space" && !dino.jumping) {
+            dino.dy = jumpStrength;
+            dino.jumping = true;
+            jumpHold = true;
+          }
+        }
+        function keyUpHandler(e) {
+          if (e.code === "Space") {
+            jumpHold = false;
+          }
+        }
+        
+        
+        
+        
+        document.addEventListener("keydown", keyDownHandler);
+        document.addEventListener("keyup", keyUpHandler);
+
+        obstacleInterval = setInterval(spawnObstacle, 2000);
+        draw();
+      }
+    }
+    
+    function updateMoneyDisplay() {
+      let fakeMoney = localStorage.getItem("fakeMoney");
+
+      // Falls fakeMoney nicht existiert, Standardwert setzen
+      if (fakeMoney === null || isNaN(fakeMoney)) {
+          fakeMoney = 1000; // Standardwert, falls kein Wert existiert
+          localStorage.setItem("fakeMoney", fakeMoney);
+      } else {
+          fakeMoney = parseInt(fakeMoney); // String in Zahl umwandeln
+      }
+
+      // Balance in der UI aktualisieren
+      document.getElementById("money").innerText = fakeMoney;
+  }
+
+  // Führt die Funktion nach dem Laden der Seite aus
+  document.addEventListener("DOMContentLoaded", updateMoneyDisplay);
+    
+    
+  document.addEventListener("DOMContentLoaded", () => {
+    // Überprüfen, ob der Key "fakeMoney" existiert
+    if (!localStorage.getItem("fakeMoney")) {
+      localStorage.setItem("fakeMoney", "1000"); // Standardwert setzen
+    }
+
+    // Wert aus localStorage holen und anzeigen
+    document.getElementById("money").textContent = localStorage.getItem("fakeMoney");
+  });
+    
+    
+    let lastTime = 0;
+function draw(currentTime) {
+  if (gameOver) return;
+
+  let deltaTime = (currentTime - lastTime) / 1000; // Zeitdifferenz in Sekunden
+  lastTime = currentTime;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Update Boden-Bewegung mit Delta Time
+  groundX -= gameSpeed * deltaTime * 60; // Normieren auf 60 FPS
+  if (groundX <= -canvas.width) groundX = 0;
+
+  ctx.drawImage(groundImg, groundX, 180, canvas.width, 20);
+  ctx.drawImage(groundImg, groundX + canvas.width, 180, canvas.width, 20);
+
+  // Update Dino-Position mit Delta Time
+  dino.y += dino.dy * deltaTime * 60;
+  dino.dy += gravity * deltaTime * 60;
+
+  if (dino.y > 150) {
+    dino.y = 150;
+    dino.jumping = false;
+    dino.dy = 0;
+  }
+
+  ctx.drawImage(dinoImg, dino.x, dino.y, dino.width, dino.height);
+
+  // Update Hindernisse
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    let obstacle = obstacles[i];
+    obstacle.x -= gameSpeed * deltaTime * 60;
+
+    if (obstacle.x + obstacle.width < 0) {
+      obstacles.splice(i, 1);
+    }
+
+    drawCactus(obstacle.x, obstacle.width);
+  }
+
+  requestAnimationFrame(draw);
+}
+
+// Startet das Spiel
+requestAnimationFrame(draw);
+    
+    
+    document.addEventListener("contextmenu", function (event) {
+  event.preventDefault();
+});
+
+// Verhindert langes Drücken und Doppeltippen auf Handys
+document.addEventListener("selectstart", function (event) {
+  event.preventDefault();
+});
+    
+  </script>
+</body>
+</html>

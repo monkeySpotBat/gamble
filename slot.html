@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎰 Slotmachine 🎰</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: radial-gradient(circle, #222, #000);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+
+        .menu-button {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: black;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 100;
+            border-radius: 5px;
+        }
+
+        .menu-button div {
+            width: 30px;
+            height: 4px;
+            background: white;
+            margin: 6px 0;
+        }
+
+        .menu {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding-top: 60px;
+            transition: 0.3s;
+        }
+
+        .menu a {
+            display: block;
+            padding: 15px;
+            color: gold;
+            font-size: 22px;
+            text-decoration: none;
+        }
+
+        .menu.open {
+            left: 0;
+        }
+
+        .slot-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px gold;
+            width: 360px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .reel {
+            width: 100px;
+            height: 120px;
+            overflow: hidden;
+            border: 3px solid gold;
+            background: black;
+            position: relative;
+        }
+
+        .symbols {
+            position: absolute;
+            width: 100%;
+            top: 0;
+        }
+
+        .symbol {
+            width: 100px;
+            height: 120px;
+            font-size: 50px;
+            line-height: 120px;
+            text-align: center;
+            border-bottom: 2px solid gold;
+        }
+
+        .money-display {
+            font-size: 22px;
+            font-weight: bold;
+            color: gold;
+            background: black;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px gold;
+            width: 200px;
+            margin: 10px auto;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        button {
+            background: linear-gradient(to bottom, gold, orange);
+            border: none;
+            padding: 12px 25px;
+            font-size: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 10px;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button:disabled {
+            background: gray;
+            cursor: not-allowed;
+        }
+
+        input {
+            width: 80px;
+            padding: 5px;
+            font-size: 18px;
+            text-align: center;
+            border: 2px solid gold;
+            background: black;
+            color: white;
+            border-radius: 5px;
+        }
+
+        #result {
+            margin-top: 10px;
+            font-size: 20px;
+        }
+      .menu a img {
+    width: 22px; 
+    height: 22px;
+    margin-right: 8px;
+}
+    </style>
+</head>
+<body>
+
+    <button class="menu-button" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </button>
+
+    <div class="menu" id="menu">
+      <a href="menu.html">🏠Home</a>
+        <a href="https://dune-glistening-zinnia.glitch.me/">🎯 Plinko</a>
+      <a href="roulette.html">
+    <img src="https://cdn-icons-png.flaticon.com/512/1232/1232529.png" alt="Roulette"> 
+    Roulette
+</a>
+      <a href="Dice.html">🎲 Dice Roll</a>
+       <a href="Risk.html">🔦💵 Risk</a>
+      <a href="horse.html">🏇🏽🏆🏁 Horse Race</a>
+      <a href="scratch.html">🎴🪙 Scratch card</a>
+    </div>
+
+    <h1>🎰 Slotmachine 🎰</h1>
+    <div class="money-display">Money: <span id="balance">10000</span> $</div>
+
+    <div class="slot-container">
+        <div class="reel"><div class="symbols" id="reel1"></div></div>
+        <div class="reel"><div class="symbols" id="reel2"></div></div>
+        <div class="reel"><div class="symbols" id="reel3"></div></div>
+    </div>
+
+    <div class="controls">
+        <p>bet: <input type="number" id="betAmount" min="1" max="5000" value="100"></p>
+        <button id="spinButton">roll 🎲</button>
+    </div>
+
+    <p id="result"></p>
+
+    <script>
+        function toggleMenu() {
+            document.getElementById("menu").classList.toggle("open");
+        }
+
+        let balance = localStorage.getItem("fakeMoney") ? Number(localStorage.getItem("fakeMoney")) : 10000;
+        document.getElementById("balance").innerText = balance;
+
+        const symbols = ["🍒", "🔔", "🍋", "💎", "🍊", "⭐"];
+        const winTable = { "🍒": 1.5, "🔔": 2, "🍋": 1.8, "💎": 3, "🍊": 1.5, "⭐": 2.5 };
+
+        document.getElementById("spinButton").addEventListener("click", spin);
+        let spinning = false;
+        setupReels();
+
+        function setupReels() {
+            for (let i = 1; i <= 3; i++) {
+                let reel = document.getElementById("reel" + i);
+                let reelSymbols = symbols.concat(symbols, symbols);
+                reel.innerHTML = reelSymbols.map(s => `<div class="symbol">${s}</div>`).join("");
+            }
+        }
+
+        
+    
+function spin() {
+    console.log("Spin gestartet");  // Debugging-Log
+    if (spinning) return;
+    spinning = true;
+    let spinButton = document.getElementById("spinButton");
+    spinButton.disabled = true; // Button deaktivieren
+
+    let bet = parseInt(document.getElementById("betAmount").value);
+    if (bet > balance || bet <= 0) {
+        alert("Ungültiger Einsatz!");
+        spinning = false;
+        spinButton.disabled = false; // Falls Fehler, sofort aktivieren
+        return;
+    }
+
+    balance -= bet;
+    document.getElementById("balance").innerText = balance;
+    localStorage.setItem("fakeMoney", balance);
+
+    let positions = [
+        Math.floor(Math.random() * symbols.length),
+        Math.floor(Math.random() * symbols.length),
+        Math.floor(Math.random() * symbols.length)
+    ];
+
+    animateReel("reel1", positions[0], 2000);
+    animateReel("reel2", positions[1], 2500);
+    animateReel("reel3", positions[2], 3000, () => {
+        console.log("Alle Walzen gestoppt");  // Debugging-Log
+        
+        try {
+            checkWin(positions, bet);  // Falls hier ein Fehler passiert, sehen wir es
+        } catch (error) {
+            console.error("Fehler in checkWin:", error);  // Fehler anzeigen
+        }
+
+        spinning = false;
+        spinButton.disabled = false; 
+    });
+}
+
+      
+    function animateReel(reelId, position, duration, callback) {
+        let reel = document.getElementById(reelId);
+        let distance = (position + symbols.length) * -120;
+
+        reel.style.transition = `transform ${duration}ms cubic-bezier(0.25, 1, 0.5, 1)`;
+        reel.style.transform = `translateY(${distance}px)`;
+
+        setTimeout(() => {
+            reel.style.transition = "none";
+            reel.style.transform = `translateY(${position * -120}px)`;
+            if (callback) callback();
+        }, duration);
+    }
+
+function checkWin(positions, bet) {
+            let s1 = symbols[positions[0]];
+            let s2 = symbols[positions[1]];
+            let s3 = symbols[positions[2]];
+            let winAmount = 0;
+
+            // **3 Gleiche Symbole (Hauptgewinn!)**
+            if (s1 === s2 && s2 === s3) {
+                winAmount = bet * winTable[s1] * 5; // **5x Multiplikator**
+            } 
+            // **2 Gleiche in der Mitte (kleinerer Gewinn)**
+            else if (s2 === s3) {
+                winAmount = bet * winTable[s2] * 1.5; // **1.5x Multiplikator**
+            } 
+            // **2 Gleiche (erste & letzte Walze)**
+            else if (s1 === s2 || s1 === s3) {
+                winAmount = bet * winTable[s1] * 1.2; // **1.2x Multiplikator**
+            }
+
+            if (winAmount > 0) {
+                balance += winAmount;
+                document.getElementById("result").innerText = `🎉 you won: ${winAmount.toFixed(2)} $!`;
+            } else {
+                document.getElementById("result").innerText = "❌ you won nothing";
+            }
+
+            document.getElementById("balance").innerText = balance;
+        }
+
+
+    </script>
+
+</body>
+</html>

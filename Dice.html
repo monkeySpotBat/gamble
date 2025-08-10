@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Casino Dice Roll</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cannon@0.6.2/build/cannon.min.js"></script>
+    <style>
+       body {
+            font-family: Arial, sans-serif;
+            background-color: #111;
+            color: white;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #canvas-container {
+            width: 600px;
+            height: 400px;
+            border: 5px solid gold;
+            border-radius: 15px;
+            background-color: #1E90FF;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+        .overlay {
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        select, input, button {
+            padding: 10px;
+            font-size: 18px;
+            margin: 5px;
+        }
+        button {
+            background-color: gold;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: orange;
+        }
+ #exactNumberContainer {
+            display: none;
+        }
+
+
+button:disabled {
+            background-color: grey;
+            cursor: not-allowed;
+        }
+      
+      .menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .menu {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding-top: 60px;
+            transition: left 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        .menu a {
+            display: block;
+            padding: 15px;
+            text-decoration: none;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .menu a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .menu.active {
+            left: 0;
+        }
+      .menu a img {
+    width: 22px; 
+    height: 22px;
+    margin-right: 8px;
+}
+    </style>
+</head>
+<body>
+  
+  <button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+  
+    <div class="menu-toggle" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+  
+  
+    <!-- Sidebar Menu -->
+    <div class="menu" id="sidebarMenu">
+        <a href="menu.html">🏠 Home</a>
+        <a href="index.html">🎯 Plinko</a>
+        <a href="slot.html">🎰 Slot Machine</a>
+      <a href="roulette.html">
+    <img src="https://cdn-icons-png.flaticon.com/512/1232/1232529.png" alt="Roulette"> 
+    Roulette
+</a>
+       <a href="Risk.html">🔦💵 Risk</a>
+      <a href="horse.html">🏇🏽🏆🏁 Horse Race</a>
+      <a href="scratch.html">🎴🪙 Scratch card</a>
+    </div>
+
+    <div class="overlay">
+        <h1>🎲 Dice Roll 🎲</h1>
+        <p>💰 Balance: <span id="balance">100</span>€</p>
+        <input type="number" id="bet" placeholder="Bet Amount" min="1">
+        <select id="betType" onchange="toggleExactNumberDropdown()">
+    <option value="none" selected>- Please Choose -</option>
+    <option value="exact2">Exact Number 1-12 (x3)</option>
+    <option value="low">Low (2-6) (x1.5)</option>
+    <option value="high">High (8-12) (x1.5)</option>
+    <option value="seven">Lucky 7 (x4)</option>
+</select>
+
+<div id="exactNumberContainer">
+            <label for="exactNumberSelect">Choose a number:</label>
+            <select id="exactNumberSelect"></select>
+        </div>
+
+
+
+        <button onclick="rollDice()">Roll Dice</button>
+        <p id="result"></p>
+    </div>
+  might be buggy
+
+
+    <div id="canvas-container">
+        <canvas id="three-canvas"></canvas>
+    </div>
+
+
+
+    <script>
+        let scene, camera, renderer, world;
+        let dice = [];
+      
+        // Lade das gespeicherte Geld oder setze Standardwert auf 100
+let balance = localStorage.getItem("fakeMoney") 
+    ? parseFloat(localStorage.getItem("fakeMoney")) 
+    : 1000;
+
+document.getElementById("balance").textContent = balance;
+
+      
+      function toggleMenu() {
+            var menu = document.getElementById("sidebarMenu");
+            menu.classList.toggle("active");
+        }
+// Funktion zum Speichern des Geldes im localStorage
+function saveBalance() {
+    localStorage.setItem("fakeMoney", balance);
+}
+
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color("#1E90FF");
+
+            camera = new THREE.PerspectiveCamera(75, 600 / 400, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, canvas: document.getElementById("three-canvas") });
+            renderer.setSize(600, 400);
+            renderer.shadowMap.enabled = true;
+
+            world = new CANNON.World();
+            world.gravity.set(0, -9.82, 0);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+            scene.add(ambientLight);
+
+            const spotLight = new THREE.SpotLight(0xffffff, 1.5);
+            spotLight.position.set(5, 10, 5);
+            spotLight.castShadow = true;
+            scene.add(spotLight);
+
+            let ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(10, 10),
+                new THREE.MeshStandardMaterial({ color: "#008000" })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            const groundBody = new CANNON.Body({ mass: 0, shape: new CANNON.Plane() });
+            groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+            world.addBody(groundBody);
+
+            camera.position.set(0, 5, 5);
+            camera.lookAt(0, 0, 0);
+        }
+
+
+
+function toggleExactNumberDropdown() {
+            let betType = document.getElementById("betType").value;
+            let exactNumberContainer = document.getElementById("exactNumberContainer");
+            let exactNumberSelect = document.getElementById("exactNumberSelect");
+
+            if (betType === "exact1" || betType === "exact2") {
+                exactNumberContainer.style.display = "block";
+                exactNumberSelect.innerHTML = ""; // Leeren der alten Werte
+
+                let maxNumber = betType === "exact1" ? 6 : 12;
+                for (let i = 1; i <= maxNumber; i++) {
+                    let option = document.createElement("option");
+                    option.value = i;
+                    option.textContent = i;
+                    exactNumberSelect.appendChild(option);
+                }
+            } else {
+                exactNumberContainer.style.display = "none";
+            }
+        }
+
+
+
+        function createDie(x, y) {
+            const dieGeometry = new THREE.BoxGeometry(1, 1, 1);
+            const materials = [
+                new THREE.MeshStandardMaterial({ map: createTexture(1) }),
+                new THREE.MeshStandardMaterial({ map: createTexture(6) }),
+                new THREE.MeshStandardMaterial({ map: createTexture(2) }),
+                new THREE.MeshStandardMaterial({ map: createTexture(5) }),
+                new THREE.MeshStandardMaterial({ map: createTexture(3) }),
+                new THREE.MeshStandardMaterial({ map: createTexture(4) })
+            ];
+
+            const dieMesh = new THREE.Mesh(dieGeometry, materials);
+            scene.add(dieMesh);
+
+            const dieShape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
+            const dieBody = new CANNON.Body({ mass: 1, shape: dieShape });
+
+            dieBody.position.set(x, y, 0);
+            dieBody.velocity.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+            dieBody.angularVelocity.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
+
+            world.addBody(dieBody);
+            return { mesh: dieMesh, body: dieBody };
+        }
+
+
+        function createTexture(number) {
+            const canvas = document.createElement("canvas");
+            canvas.width = canvas.height = 256;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, 256, 256);
+
+            const positions = {
+                1: [[128, 128]],
+                2: [[64, 64], [192, 192]],
+                3: [[64, 64], [128, 128], [192, 192]],
+                4: [[64, 64], [64, 192], [192, 64], [192, 192]],
+                5: [[64, 64], [64, 192], [192, 64], [192, 192], [128, 128]],
+                6: [[64, 64], [64, 128], [64, 192], [192, 64], [192, 128], [192, 192]]
+            };
+            positions[number].forEach(([x, y]) => {
+                ctx.beginPath();
+                ctx.arc(x, y, 30, 0, Math.PI * 2);
+                ctx.fillStyle = "black";
+                ctx.fill();
+            });
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+
+let isRolling = false; // 🛑 Variable, um Spam zu verhindern
+
+function rollDice() {
+    if (isRolling) return;
+    isRolling = true;
+    disableInputs();
+
+    if (dice.length) dice.forEach(d => { scene.remove(d.mesh); world.removeBody(d.body); });
+    dice = [createDie(-1, 3), createDie(1, 3)];
+
+    setTimeout(() => {
+        let values = dice.map(getDieValue);
+        let sum = values[0] + values[1];
+
+        let bet = parseInt(document.getElementById("bet")?.value || 0);
+        let betType = document.getElementById("betType")?.value;
+        let chosenNumber = parseInt(document.getElementById("exactNumberSelect")?.value) || 0;
+
+        if (isNaN(bet) || bet <= 0 || bet > balance) {
+            alert("Invalid bet!");
+            enableInputs();
+            isRolling = false;
+            return;
+        }
+
+        balance -= bet;
+        saveBalance(); // 💾 Speichern nach Einsatz
+
+        let winnings = 0;
+
+        console.log(`🎲 Würfel: ${values[0]} + ${values[1]} = ${sum}`);
+        console.log(`💸 Wette: ${betType} | Gewählte Zahl: ${chosenNumber}`);
+
+        if (betType === "exact1" && values.includes(chosenNumber)) {
+            winnings = bet * 5;
+        } 
+        else if (betType === "exact2" && sum === chosenNumber) {
+            winnings = bet * 3;
+        } 
+        else if (betType === "low" && sum >= 2 && sum <= 6) {
+            winnings = bet * 1.5;
+        } 
+        else if (betType === "high" && sum >= 8 && sum <= 12) {
+            winnings = bet * 1.5;
+        } 
+        else if (betType === "seven" && sum === 7) {
+            winnings = bet * 4;
+        }
+
+        balance += winnings;
+        saveBalance(); // 💾 Speichern nach Gewinn/Verlust
+
+        document.getElementById("balance").textContent = balance;
+        document.getElementById("result").textContent = winnings > 0 
+            ? `🎉 You won! +${winnings}€` 
+            : `😞 You lost! -${bet}€`;
+
+        setTimeout(() => {
+            enableInputs();
+            isRolling = false;
+        }, 2000);
+
+    }, 3000);
+}
+
+
+function getDieValue(die) {
+    let upVector = new CANNON.Vec3(0, 1, 0); 
+    let faces = [
+        { value: 1, normal: new CANNON.Vec3(1, 0, 0) },  
+        { value: 6, normal: new CANNON.Vec3(-1, 0, 0) }, 
+        { value: 2, normal: new CANNON.Vec3(0, 1, 0) },  
+        { value: 5, normal: new CANNON.Vec3(0, -1, 0) }, 
+        { value: 3, normal: new CANNON.Vec3(0, 0, 1) },  
+        { value: 4, normal: new CANNON.Vec3(0, 0, -1) }  
+    ];
+
+    let bestFace = faces[0];
+    let maxHeight = -Infinity;
+
+    faces.forEach(face => {
+        let worldNormal = die.body.quaternion.vmult(face.normal);
+        let height = worldNormal.dot(upVector);
+
+        if (height > maxHeight) {
+            maxHeight = height;
+            bestFace = face;
+        }
+    });
+
+    return bestFace.value;
+}
+
+
+
+// Funktion zum Deaktivieren der Eingaben
+function disableInputs() {
+    let rollButton = document.getElementById("rollButton");
+    let betInput = document.getElementById("bet");
+    let betTypeSelect = document.getElementById("betType");
+    let exactNumberSelect = document.getElementById("exactNumberSelect");
+
+    if (rollButton) rollButton.disabled = true;
+    if (betInput) betInput.disabled = true;
+    if (betTypeSelect) betTypeSelect.disabled = true;
+    if (exactNumberSelect) exactNumberSelect.disabled = true;
+}
+
+// Funktion zum Reaktivieren der Eingaben
+function enableInputs() {
+    let rollButton = document.getElementById("rollButton");
+    let betInput = document.getElementById("bet");
+    let betTypeSelect = document.getElementById("betType");
+    let exactNumberSelect = document.getElementById("exactNumberSelect");
+
+    if (rollButton) rollButton.disabled = false;
+    if (betInput) betInput.disabled = false;
+    if (betTypeSelect) betTypeSelect.disabled = false;
+    if (exactNumberSelect) exactNumberSelect.disabled = false;
+}
+
+
+
+
+
+        function animate() {
+            requestAnimationFrame(animate);
+            world.step(1 / 60);
+            dice.forEach(d => {
+                d.mesh.position.copy(d.body.position);
+                d.mesh.quaternion.copy(d.body.quaternion);
+            });
+            renderer.render(scene, camera);
+        }
+
+        init();
+        animate();
+    </script>
+
+</body>
+</html>

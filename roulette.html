@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html lang="en">
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Javascript Roulette</title>
+    <meta name="title" content="RouletteRT">
+    <meta name="description" content="A fully functioning roulette game made using Javascript and CSS">
+    <meta name="author" content="ozboware">
+    <meta property="og:url" content="/">
+    <meta property="og:title" content="Javascript Roulette">
+    <meta property="og:description" content="A fully functioning roulette game made using Javascript and CSS">
+    <link href="./assets/css/style.css" rel="stylesheet" type="text/css">
+    <style>
+        /* Hamburger Menu Styles */
+        .menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .menu {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding-top: 60px;
+            transition: left 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        .menu a {
+            display: block;
+            padding: 15px;
+            text-decoration: none;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .menu a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .menu.active {
+            left: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Hamburger Button -->
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+  <div class="menu-toggle" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+  
+    <!-- Sidebar Menu -->
+    <div class="menu" id="sidebarMenu">
+        <a href="menu.html">🏠 Home</a>
+        <a href="index.html">🎯 Plinko</a>
+        <a href="slot.html">🎰 Slot Machine</a>
+      <a href="Dice.html">🎲 Dice Roll</a>
+       <a href="Risk.html">🔦💵 Risk</a>
+      <a href="horse.html">🏇🏽🏆🏁 Horse Race</a>
+      <a href="scratch.html">🎴🪙 Scratch card</a>
+    </div>
+
+    <script src="./assets/js/app.js"></script>
+
+    <script>
+        function toggleMenu() {
+            var menu = document.getElementById("sidebarMenu");
+            menu.classList.toggle("active");
+        }
+    </script>
+</body>
+</html>

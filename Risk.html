@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Ladder Casino</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background: radial-gradient(circle, #1a1a1a, #000000);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+        }
+        h1 {
+            color: gold;
+            font-size: 28px;
+        }
+        .ladder {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .step {
+            width: 300px;
+            height: 50px;
+            margin: 6px;
+            background: linear-gradient(45deg, #444, #666);
+            border: 3px solid gold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .active {
+            background-color: yellow;
+            color: black;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px yellow;
+        }
+        .lost {
+            background-color: red;
+            color: white;
+        }
+        .chosen {
+            background-color: orange !important;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 12px 28px;
+            font-size: 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+        .continue { background-color: green; color: white; }
+        .continue:hover { background-color: limegreen; }
+        .cashout { background-color: blue; color: white; }
+        .cashout:hover { background-color: dodgerblue; }
+        .bet-container {
+            margin: 20px 0;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 120px;
+            text-align: center;
+        }
+        .balance {
+            font-size: 22px;
+            margin-top: 10px;
+            color: gold;
+        }
+      
+      .menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .menu {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding-top: 60px;
+            transition: left 0.3s ease-in-out;
+            z-index: 1000;
+        }
+
+        .menu a {
+            display: block;
+            padding: 15px;
+            text-decoration: none;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+
+        .menu a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .menu.active {
+            left: 0;
+        }
+      .menu a img {
+    width: 22px; 
+    height: 22px;
+    margin-right: 8px;
+}
+    </style>
+</head>
+<body>
+   <button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+  <div class="menu-toggle" onclick="toggleMenu()">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+  
+    <!-- Sidebar Menu -->
+    <div class="menu" id="sidebarMenu">
+        <a href="menu.html">🏠 Home</a>
+        <a href="index.html">🎯 Plinko</a>
+        <a href="slot.html">🎰 Slot Machine</a>
+      <a href="roulette.html">
+    <img src="https://cdn-icons-png.flaticon.com/512/1232/1232529.png" alt="Roulette"> 
+    Roulette
+</a>
+       <a href="Dice.html">🎲 Dice Roll</a>
+      <a href="horse.html">🏇🏽🏆🏁 Horse Race</a>
+      <a href="scratch.html">🎴🪙 Scratch card</a>
+    </div>
+  
+  
+  
+  
+    <div class="container">
+        <h1>Risk Ladder Casino</h1>
+        <p>Can you reach the top or will you lose it all?</p>
+        
+        <div class="balance">Balance: <span id="coins">1000</span> Coins</div>
+
+        <div class="bet-container">
+            <label for="bet">Bet Amount: </label>
+            <input type="number" id="bet" min="10" value="50">
+        </div>
+
+        <div class="ladder" id="ladder"></div>
+
+        <div class="button-container">
+            <button class="continue" onclick="continueGame()">Continue</button>
+            <button class="cashout" onclick="cashout()">Cash Out</button>
+        </div>
+    </div>
+
+    <script>
+        let coins = parseInt(localStorage.getItem("fakeMoney")) || 1000; 
+        const totalSteps = 12;
+        let currentStep = 1;
+        let startBet = 0;
+        let chosenNumber;
+        let gameActive = false;
+	let extraChanceUsed = false;
+        
+        const ladder = document.getElementById("ladder");
+        const coinsDisplay = document.getElementById("coins");
+
+
+function toggleMenu() {
+            var menu = document.getElementById("sidebarMenu");
+            menu.classList.toggle("active");
+        }
+
+
+function updateStats() {
+    document.getElementById("money").textContent = money;
+    document.getElementById("tickets").textContent = tickets;
+    localStorage.setItem("fakeMoney", money); // Geld speichern
+}
+
+        function setupLadder() {
+            ladder.innerHTML = "";
+            for (let i = totalSteps; i >= 1; i--) {
+                let step = document.createElement("div");
+                step.classList.add("step");
+                step.id = "step" + i;
+                step.innerText = i;
+                ladder.appendChild(step);
+            }
+        }
+        
+        function startGame() {
+            setupLadder();
+            chosenNumber = Math.floor(Math.random() * 6) + 6;
+            currentStep = 1;
+            gameActive = true;
+            document.getElementById("step1").classList.add("active");
+        }
+        startGame();
+
+        function continueGame() {
+    if (!gameActive) return;
+
+    let bet = parseInt(document.getElementById("bet").value);
+    if (currentStep === 1) startBet = bet;
+    if (bet > coins) {
+        alert("Not enough coins!");
+        return;
+    }
+
+    let maxJump = Math.floor(Math.random() * 6) + 1;
+    let newStep = currentStep + maxJump;
+    if (newStep > totalSteps) newStep = totalSteps;
+
+    // Falls der Spieler auf der Zahl ist, darf er nur noch einmal weitermachen
+    if (currentStep === chosenNumber) {
+        if (extraChanceUsed) {
+            alert("You already used your extra chance! Cash out or lose everything.");
+            return;
+        }
+        extraChanceUsed = true;
+    } 
+    // Falls er danach nochmal drückt und über die Zahl geht, verliert er
+    else if (currentStep > chosenNumber) {
+        document.getElementById("step" + currentStep).classList.add("lost");
+        alert("You went too far and lost everything!");
+        coins -= startBet;
+        updateCoins();
+        endGame();
+        return;
+    }
+
+    // Schritt aktualisieren
+    document.getElementById("step" + currentStep).classList.remove("active");
+    currentStep = newStep;
+    document.getElementById("step" + currentStep).classList.add("active");
+}
+
+        function cashout() {
+    if (!gameActive) return;
+
+    if (currentStep < chosenNumber) {
+        alert("You are below the chosen number and lost!");
+        coins -= startBet;
+    } else if (currentStep === chosenNumber) {
+        alert("You hit the exact number and got your money back!");
+        // Kein Gewinn oder Verlust, nur Geld zurück
+    } else {
+        let winnings = startBet * (1 + (currentStep - chosenNumber) * 0.5);
+        alert("You stopped at step " + currentStep + " and won " + winnings + " coins!");
+        coins += winnings;
+    }
+
+    updateCoins();
+    endGame();
+}
+
+       function updateCoins() {
+    coinsDisplay.innerText = coins;
+    localStorage.setItem("fakeMoney", coins); // ⬅️ Coins speichern
+}
+
+// Rufe updateCoins() direkt beim Start auf, um den richtigen Wert anzuzeigen
+updateCoins();
+
+
+
+function endGame() {
+    gameActive = false;
+    revealChosenNumber(); // 🔥 Hier den Reveal aufrufen!
+    setTimeout(startGame, 2000); // 2 Sekunden warten, bevor das Spiel neu startet
+}
+
+
+
+function revealChosenNumber() {
+    let chosenStep = document.getElementById("step" + chosenNumber);
+    if (!chosenStep) return;
+
+    // Blinken lassen (3-mal)
+    let blinkCount = 0;
+    let blinkInterval = setInterval(() => {
+        chosenStep.style.backgroundColor = (blinkCount % 2 === 0) ? "gold" : "orange";
+        chosenStep.style.boxShadow = (blinkCount % 2 === 0) ? "0 0 25px gold" : "0 0 10px orange";
+        blinkCount++;
+
+        if (blinkCount > 5) {
+            clearInterval(blinkInterval);
+
+            // Dauerhafte Glow-Animation aktivieren
+            chosenStep.style.animation = "glow 1.5s infinite alternate";
+        }
+    }, 300);
+}
+
+// CSS-Animation für dauerhaftes Leuchten
+let style = document.createElement("style");
+style.innerHTML = `
+    @keyframes glow {
+        0% { box-shadow: 0 0 10px gold; background-color: orange; }
+        100% { box-shadow: 0 0 30px yellow; background-color: gold; }
+    }
+`;
+document.head.appendChild(style);
+
+
+
+    </script>
+</body>
+</html>
